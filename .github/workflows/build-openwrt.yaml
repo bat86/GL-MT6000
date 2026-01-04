@@ -64,7 +64,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: "builder_repo"
-
+          
+      - name: Fix failing patches
+        run: |
+          # Создаем backup директории патчей
+          cp -r target/linux/mediatek/patches-6.12 target/linux/mediatek/patches-6.12.backup
+          
+          # Отключаем конкретный проблемный патч
+          for patch in target/linux/mediatek/patches-6.12/999-9999-usb-power-control.patch; do
+            if [ -f "$patch" ]; then
+              echo "Disabling $patch"
+              mv "$patch" "${patch}.disabled"
+            fi
+          done
+          
+          # Для отладки: показываем какие патчи остались
+          echo "Remaining patches in 6.12 series:"
+          ls -la target/linux/mediatek/patches-6.12/ | grep -E "\.patch$" | head -10
+          
       - name: Update and install feeds
         run: |
           ./scripts/feeds update -a
